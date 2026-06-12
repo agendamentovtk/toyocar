@@ -1,0 +1,52 @@
+/* =========================================================================
+   🎨 ESTILIZAÇÃO CUSTOMIZADA TOYOCAR
+   ========================================================================= */
+
+input[type="date"]::-webkit-calendar-picker-indicator,
+input[type="month"]::-webkit-calendar-picker-indicator {
+    background: transparent;
+    bottom: 0;
+    color: transparent;
+    cursor: pointer;
+    height: auto;
+    left: 0;
+    position: absolute;
+    right: 0;
+    top: 0;
+    width: auto;
+}
+
+::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+
+::-webkit-scrollbar-track {
+    background: #0c0a09; 
+}
+
+::-webkit-scrollbar-thumb {
+    background: #dc2626; 
+    border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #b91c1c;
+}
+
+.hidden {
+    display: none !important;
+}
+
+tr {
+    transition: background-color 0.2s ease, opacity 0.2s ease;
+}
+
+input:focus, textarea:focus, select:focus {
+    border-color: #dc2626 !important;
+    box-shadow: 0 0 0 2px rgba(220, 38, 38, 0.2) !important;
+}
+
+table {
+    border-spacing: 0;
+}

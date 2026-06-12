@@ -4,23 +4,33 @@ const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 
 const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+// =========================================================================
+// 🛠️ CONFIGURAÇÃO CENTRALIZADA (Fácil de alterar dias, horários e vagas)
+// =========================================================================
 const CONFIG_OFICINA = {
-    limiteCaracteresOutros: 100, 
+    limiteCaracteresOutros: 150, 
     servicos: [
         { id: "revisao", nome: "Revisão Geral (Troca de Óleo e Filtros)", preco: 150 },
-        { id: "Freios", nome: "Revisão de Freios", preco: 150},
-        { id: "Suspensão", nome: "Revisão de Amortecedores e Suspensão", preco: 250},
-        { id: "outros", nome: "Outros (Avaliação / Diagnóstico)", preco: 150 }
+        { id: "outros", nome: "Outros (Avaliação / Diagnóstico)", preco: 0 }
     ],
-    agendaHorarios: {
-        "08:00": { vagas: 3, ativa: true },
-        "09:00": { vagas: 3, ativa: true },
-        "10:00": { vagas: 2, ativa: true },
-        "11:00": { vagas: 1, ativa: true }, 
-        "13:00": { vagas: 3, ativa: true },
-        "14:00": { vagas: 3, ativa: true },
-        "15:00": { vagas: 2, ativa: true },
-        "16:00": { vagas: 2, ativa: true }
+    
+    // Configuração de dias de funcionamento e horários específicos por dia
+    // 0 = Domingo, 1 = Segunda, 2 = Terça, 3 = Quarta, 4 = Quinta, 5 = Sexta, 6 = Sábado
+    diasTrabalho: {
+        1: ["08:00", "09:00", "10:00", "11:00", "13:30", "14:00", "15:00", "16:00", "17:00"], // Segunda
+        2: ["08:00", "09:00", "10:00", "11:00", "13:30", "14:00", "15:00", "16:00", "17:00"], // Terça
+        3: ["08:00", "09:00", "10:00", "11:00", "13:30", "14:00", "15:00", "16:00", "17:00"], // Quarta
+        4: ["08:00", "09:00", "10:00", "11:00", "13:30", "14:00", "15:00", "16:00", "17:00"], // Quinta
+        5: ["08:00", "09:00", "10:00", "11:00", "13:30", "14:00", "15:00", "16:00", "17:00"], // Sexta
+        6: ["08:00", "09:00", "10:00", "11:00"]                                              // Sábado
+        // 0 e 5 (Domingo) não listados significa que a oficina estará fechada!
+    },
+
+    // Capacidade de carros simultâneos por faixa de horário (caso queira limitar individualmente)
+    capacidadeVagasPadrao: 3, // Quantos elevadores/mânicos livres por horário
+    vagasExcecaoPorHora: {
+        "11:00": 1, // Exemplo: se às 11:00 o ritmo diminui por causa do almoço
+        "17:00": 1  // Exemplo: fim do expediente
     }
 };
 
@@ -34,6 +44,7 @@ function inicializarCliente() {
     renderizarServicosCliente();
     
     const dataInput = document.getElementById('dataAgendamento');
+    // Bloqueia datas passadas no calendário nativo
     dataInput.min = new Date().toISOString().split('T')[0];
     
     dataInput.addEventListener('change', buscarVagasDisponiveis);
@@ -88,6 +99,20 @@ async function buscarVagasDisponiveis() {
 
     container.innerHTML = '<p class="text-xs text-stone-500 col-span-full text-center">Calculando vagas na oficina...</p>';
 
+    // Descobrir o dia da semana da data selecionada (ajustando fuso horário)
+    const partesData = dataSelecionada.split('-');
+    const objetoData = new Date(partesData[0], partesData[1] - 1, partesData[2]);
+    const diaSemana = objetoData.getDay(); 
+
+    // Verifica se a oficina trabalha no dia escolhido
+    if (!CONFIG_OFICINA.diasTrabalho[diaSemana]) {
+        container.innerHTML = '<p class="text-xs text-amber-500 col-span-full text-center py-2">A oficina não possui expediente neste dia (Fechado).</p>';
+        return;
+    }
+
+    // Busca os horários configurados para aquele dia específico
+    const horariosDoDia = CONFIG_OFICINA.diasTrabalho[diaSemana];
+
     const { data: agendados, error } = await supabaseClient
         .from('agendamentos_oficina')
         .select('horario')
@@ -101,12 +126,14 @@ async function buscarVagasDisponiveis() {
     container.innerHTML = '';
     let encontrouHorario = false;
 
-    Object.keys(CONFIG_OFICINA.agendaHorarios).forEach(hora => {
-        const configHora = CONFIG_OFICINA.agendaHorarios[hora];
-        if (!configHora.ativa) return;
+    horariosDoDia.forEach(hora => {
+        // Define dinamicamente o limite de vagas para aquela hora
+        const limiteVagas = CONFIG_OFICINA.vagasExcecaoPorHora[hora] !== undefined 
+            ? CONFIG_OFICINA.vagasExcecaoPorHora[hora] 
+            : CONFIG_OFICINA.capacidadeVagasPadrao;
 
         const carrosAgendados = contagemPorHora[hora] || 0;
-        const vagasRestantes = configHora.vagas - carrosAgendados;
+        const vagasRestantes = limiteVagas - carrosAgendados;
 
         if (vagasRestantes > 0) {
             encontrouHorario = true;
@@ -124,7 +151,7 @@ async function buscarVagasDisponiveis() {
     });
 
     if (!encontrouHorario) {
-        container.innerHTML = '<p class="text-xs text-amber-500 col-span-full text-center py-2">Nenhum elevador/vaga disponível para esta data.</p>';
+        container.innerHTML = '<p class="text-xs text-amber-500 col-span-full text-center py-2">Nenhum elevador/vaga disponível para os horários deste dia.</p>';
     }
 }
 
@@ -162,10 +189,9 @@ async function enviarAgendamento(e) {
     }
 }
 
-// Injeção de arquivo .ics universal (Atende Google Agenda, Samsung, Apple, etc.)
 function gerarEventoCalendario(nome, dataStr, horarioStr, servicos) {
     const dataRef = new Date(dataStr + 'T' + horarioStr + ':00');
-    const dataFimRef = new Date(dataRef.getTime() + 60 * 60 * 1000); // Estimativa padrão: 1 hora de recepção
+    const dataFimRef = new Date(dataRef.getTime() + 60 * 60 * 1000); 
 
     const formatarDataICS = (d) => d.toISOString().replace(/-|:|\.\d+/g, '');
     
@@ -257,7 +283,6 @@ async function carregarPainelOficina() {
 
     if (error) return console.error("Erro ao buscar dados do Supabase:", error);
 
-    // Referências das 5 tabelas cronológicas
     const tHoje = document.getElementById('tabelaHoje');
     const tAmanha = document.getElementById('tabelaAmanha');
     const tSemana = document.getElementById('tabelaSemana');
@@ -270,7 +295,6 @@ async function carregarPainelOficina() {
     const metricas = {};
     CONFIG_OFICINA.servicos.forEach(s => metricas[s.nome] = { qtd: 0, valor: 0 });
 
-    // Cálculos de Tempo Inteligentes (Desconsiderando fusos horários locais agressivos)
     const agora = new Date();
     const hojeStr = agora.toISOString().split('T')[0];
     
@@ -310,13 +334,11 @@ async function carregarPainelOficina() {
 
         if (ag.detalhes_outros) linhasDetalhadas.push(`<span class="opacity-80">Sintomas: "${ag.detalhes_outros}"</span>`);
 
-        // Identificação estruturada do link do WhatsApp com mensagem padronizada
         const foneLimpo = ag.cliente_telefone.replace(/\D/g, '');
         const dataFormatada = ag.data.split('-').reverse().join('/');
         const mensagemWhats = encodeURIComponent(`Olá ${ag.cliente_nome}, tudo bem? Gostaria de relembrar sobre a revisão do seu veículo agendada na TOYOCAR para o dia ${dataFormatada} às ${ag.horario}. Podemos confirmar sua presença?`);
         const urlWhats = `https://api.whatsapp.com/send?phone=55${foneLimpo}&text=${mensagemWhats}`;
 
-        // Determinação Exata de Régua Temporal
         let blocoAlvo = "";
         let ehPassado = false;
 
@@ -365,7 +387,6 @@ async function carregarPainelOficina() {
         } else {
             tr.className = "cursor-pointer hover:bg-stone-900/40 border-b border-stone-800/40 transition-colors";
             
-            // Colunas de data variam dependendo da tabela por estética visual
             const tdDataHora = (blocoAlvo === 'hoje' || blocoAlvo === 'amanha') 
                 ? `<td class="p-4 font-semibold text-red-500 text-sm">${ag.horario}</td>`
                 : `<td class="p-4 text-stone-300 text-xs font-medium">${dataFormatada}<br><span class="text-red-500 font-semibold text-sm">${ag.horario}</span></td>`;
@@ -410,7 +431,6 @@ async function carregarPainelOficina() {
         }
     });
 
-    // Injetores de segurança para listas vazias individuais
     const stringVazia = '<tr><td colspan="6" class="p-4 text-center text-stone-600 text-xs">Nenhum veículo nesta listagem.</td></tr>';
     if (cHoje === 0) tHoje.innerHTML = stringVazia;
     if (cAmanha === 0) tAmanha.innerHTML = stringVazia;
@@ -449,7 +469,7 @@ function renderizarGraficoOficina(metricas) {
     if (!legenda) return;
     legenda.innerHTML = '';
 
-    const labels = []; const dados = []; const cores = ['#28b315', '#3b82f6', '#eab308'];
+    const labels = []; const dados = []; const cores = ['#dc2626', '#3b82f6', '#eab308'];
 
     Object.keys(metricas).forEach((name, i) => {
         const item = metricas[name]; labels.push(name); dados.push(item.qtd);

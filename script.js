@@ -488,7 +488,7 @@ function renderizarGraficoOficina(metricas) {
     if (!legenda) return;
     legenda.innerHTML = '';
 
-    const labels = []; const dados = []; const cores = ['#dc2626', '#3b82f6', '#eab308'];
+    const labels = []; const dados = []; const cores = ['#33b310', '#3b82f6', '#eab308'];
 
     Object.keys(metricas).forEach((name, i) => {
         const item = metricas[name]; labels.push(name); dados.push(item.qtd);

@@ -60,8 +60,36 @@
 
             <button type="submit" class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3 rounded-xl text-xs uppercase tracking-wider tracking-widest transition-colors shadow-lg mt-2">Confirmar e Reservar Vaga</button>
         </form>
+            <div id="modalSucesso" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fade-in">
+                <div class="bg-stone-900 border border-stone-800 p-6 rounded-2xl max-w-md w-full text-center space-y-4 shadow-2xl">
+                    <div class="mx-auto w-12 h-12 rounded-full bg-emerald-950/50 border border-emerald-500/30 flex items-center justify-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" />
+                        </svg>
+                    </div>
+                    
+                    <h3 class="text-xl font-bold text-stone-100">Vaga Reservada!</h3>
+                    
+                    <p id="modalMensagemTexto" class="text-sm text-stone-400 leading-relaxed">
+                        Seu agendamento foi realizado com sucesso.
+                    </p>
+
+                    <div class="pt-2 border-t border-stone-800 flex flex-col space-y-2">
+                        <a id="btnAdicionarAgenda" href="#" target="_blank" class="w-full bg-stone-950 border border-stone-800 text-stone-300 hover:text-white hover:border-red-600 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all flex items-center justify-center space-x-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 2 0 002-2V7a2 2 2 0 00-2-2H5a2 2 2 0 00-2 2v12a2 2 2 0 002 2z" />
+                            </svg>
+                            <span>Adicionar ao meu Calendário</span>
+                        </a>
+                        
+                        <button onclick="fecharModalSucesso()" class="w-full bg-red-600 hover:bg-red-700 text-white px-4 py-2.5 rounded-xl text-sm font-bold transition-colors">
+                            Entendido
+                        </button>
+                    </div>
+                </div>
             </div>
 
+            </div>
             <footer class="absolute bottom-4 left-0 w-full text-center pointer-events-none">
                 <p class="text-[10px] uppercase tracking-widest text-stone-600 font-medium">
                     &copy; 2026 <span class="text-stone-500 font-bold">VTK Technologies</span> • Todos os direitos reservados.

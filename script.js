@@ -164,7 +164,6 @@ async function enviarAgendamento(e) {
     const listaServicos = Array.from(checkboxes).map(cb => cb.value).join(', ');
     const dados = {
         cliente_nome: document.getElementById('nome').value,
-        cliente_telefone: document.getElementById('telefone').value,
         veiculo_modelo: document.getElementById('modelo').value,
         servicos_selecionados: listaServicos,
         detalhes_outros: document.getElementById('detalhesOutros').value,
@@ -177,44 +176,64 @@ async function enviarAgendamento(e) {
     if (error) {
         alert("Erro no agendamento: " + error.message);
     } else {
-        alert(`Sucesso! Sua vaga foi reservada para o dia ${dados.data.split('-').reverse().join('/')} às ${dados.horario}.`);
+        // --- ANTES: Usava alert() nativo. AGORA: Usa o Modal Premium ---
+        const dataFormatada = dados.data.split('-').reverse().join('/');
+        const msgModal = `Olá <strong>${dados.cliente_nome}</strong>, seu veículo <strong>${dados.veiculo_modelo}</strong> foi mapeado para o dia <strong>${dataFormatada}</strong> às <strong class="text-red-500">${dados.horario}</strong>.`;
         
-        if(confirm("Deseja adicionar este compromisso ao Google Agenda / Calendário do seu celular para não esquecer?")) {
-            gerarEventoCalendario(dados.cliente_nome, dados.data, dados.horario, listaServicos);
-        }
+        document.getElementById('modalMensagemTexto').innerHTML = msgModal;
+        
+        // Configura o link direto do Google Agenda no botão do modal
+        const urlCalendario = gerarUrlCalendarioUniversal(dados.cliente_nome, dados.data, dados.horario, listaServicos);
+        document.getElementById('btnAdicionarAgenda').href = urlCalendario;
 
+        // Exibe o modal na tela tirando a classe 'hidden'
+        document.getElementById('modalSucesso').classList.remove('hidden');
+
+        // Limpa o formulário de fundo de forma limpa
         document.getElementById('formOficina').reset();
         document.getElementById('wrapperOutros').classList.add('hidden');
         document.getElementById('vagasContainer').innerHTML = '<p class="text-xs text-stone-500 col-span-full text-center py-2">Selecione uma data para checar as vagas.</p>';
     }
 }
 
-function gerarEventoCalendario(nome, dataStr, horarioStr, servicos) {
-    const dataRef = new Date(dataStr + 'T' + horarioStr + ':00');
-    const dataFimRef = new Date(dataRef.getTime() + 60 * 60 * 1000); 
+// --- NOVA FUNÇÃO: GERA LINK DIRETO PARA O GOOGLE AGENDA (SEM ARQUIVO) ---
+// --- FUNÇÃO: GERA LINK UNIVERSAL QUE ABRE O APP PADRÃO DE CALENDÁRIO DO CELULAR ---
+function gerarUrlCalendarioUniversal(nome, dataStr, horarioStr, servicos) {
+    // Monta o objeto de data inicial (Ano, Mês [0-11], Dia, Hora, Minuto)
+    const partesData = dataStr.split('-');
+    const partesHora = horarioStr.split(':');
+    
+    const dataInicio = new Date(partesData[0], partesData[1] - 1, partesData[2], partesHora[0], partesHora[1]);
+    const dataFim = new Date(dataInicio.getTime() + 60 * 60 * 1000); // 1 hora de duração padrão
 
+    // Formata as datas no padrão exigido pelo protocolo iCalendar (AAAAMMDDTHHMMSSZ)
     const formatarDataICS = (d) => d.toISOString().replace(/-|:|\.\d+/g, '');
     
+    // Cria a estrutura padrão de um arquivo .ics (iCalendar)
     const icsContent = [
         "BEGIN:VCALENDAR",
         "VERSION:2.0",
+        "PRODID:-//TOYOCAR//Agendamento//PT",
         "BEGIN:VEVENT",
-        `DTSTART:${formatarDataICS(dataRef)}`,
-        `DTEND:${formatarDataICS(dataFimRef)}`,
+        `UID:${Date.now()}@toyocar.com`, // Identificador único do evento
+        `DTSTART:${formatarDataICS(dataInicio)}`,
+        `DTEND:${formatarDataICS(dataFim)}`,
         `SUMMARY:Manutenção TOYOCAR - ${nome}`,
-        `DESCRIPTION:Serviços: ${servicos}. Lembrete de entrega de veículo na oficina.`,
+        `DESCRIPTION:Serviços: ${servicos}.\\nPor favor\\, comparecer com o veículo no horário marcado.`,
         "LOCATION:Oficina Mecânica TOYOCAR",
         "END:VEVENT",
         "END:VCALENDAR"
     ].join("\r\n");
 
-    const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
-    const link = document.createElement('a');
-    link.href = URL.createObjectURL(blob);
-    link.download = `agendamento_toyocar_${dataStr}.ics`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    // Codifica o conteúdo em Base64 para que o navegador entenda como um link de dados direto,
+    // eliminando a necessidade de criar e baixar um arquivo físico na pasta de downloads.
+    const base64Content = btoa(unescape(encodeURIComponent(icsContent)));
+    return `data:text/calendar;charset=utf-8;base64,${base64Content}`;
+}
+
+// --- FUNÇÃO PARA FECHAR O MODAL ---
+function fecharModalSucesso() {
+    document.getElementById('modalSucesso').classList.add('hidden');
 }
 
 // --- PAINEL ADMINISTRATIVO (DASHBOARD) ---

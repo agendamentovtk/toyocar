@@ -11,6 +11,8 @@ const CONFIG_OFICINA = {
     limiteCaracteresOutros: 150, 
     servicos: [
         { id: "revisao", nome: "Revisão Geral (Troca de Óleo e Filtros)", preco: 150 },
+        { id: "freios", nome: "Revisão de Freios/Pastilhas", preco: 250},
+        { id: "Suspensao", nome: "Troca de suspensão/amortecedores", preco: 350},
         { id: "outros", nome: "Outros (Avaliação / Diagnóstico)", preco: 0 }
     ],
     
@@ -488,7 +490,7 @@ function renderizarGraficoOficina(metricas) {
     if (!legenda) return;
     legenda.innerHTML = '';
 
-    const labels = []; const dados = []; const cores = ['#33b310', '#3b82f6', '#eab308'];
+    const labels = []; const dados = []; const cores = ['#33b310', '#3b82f6', '#eab308', '#f12df1'];
 
     Object.keys(metricas).forEach((name, i) => {
         const item = metricas[name]; labels.push(name); dados.push(item.qtd);

@@ -10,7 +10,7 @@ const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const CONFIG_OFICINA = {
     limiteCaracteresOutros: 150, 
     servicos: [
-        { id: "revisao", nome: "Revisão Geral (Troca de Óleo e Filtros)", preco: 150 },
+        { id: "revisao", nome: "Revisão Geral (Troca de Óleo e Filtros)", preco: 200 },
         { id: "freios", nome: "Revisão de Freios/Pastilhas", preco: 250},
         { id: "Suspensao", nome: "Revisão de Suspensão/Amortecedores", preco: 400},
         { id: "outros", nome: "Outros (Avaliação / Diagnóstico)", preco: 0 }

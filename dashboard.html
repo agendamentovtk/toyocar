@@ -41,7 +41,7 @@
                 <img src="images/logo.png" alt="Logo TOYOCAR" class="h-9 object-contain">
                 <div class="border-l border-stone-800 pl-4">
                     <h1 class="text-md font-black uppercase tracking-wider text-stone-100">Controle Operacional</h1>
-                    <p class="text-[11px] text-stone-400 font-medium">Vagas Agendadas</p>
+                    <p class="text-[11px] text-stone-400 font-medium">Elevadores & Vagas Agendadas</p>
                 </div>
             </div>
             
@@ -84,7 +84,7 @@
                 <button onclick="toggleSecao('secaoHoje', 'setaHoje')" class="w-full flex items-center justify-between font-bold text-xs uppercase tracking-wider text-stone-400 hover:text-stone-200 transition-colors">
                     <div class="flex items-center space-x-2">
                         <span class="w-2 h-2 rounded-full bg-red-600 animate-pulse"></span>
-                        <span>Ordens de Hoje</span>
+                        <span id="tituloHoje">Ordens de Hoje</span>
                     </div>
                     <svg id="setaHoje" xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 transition-transform duration-200" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
                 </button>
@@ -94,10 +94,10 @@
                             <tr class="bg-stone-950/40 text-stone-400 text-[11px] font-bold uppercase tracking-wider border-b border-stone-850">
                                 <th class="p-4 w-[18%]">Cliente</th>
                                 <th class="p-4 w-[12%]">Veículo</th>
-                                <th class="p-4 w-[25%]">Serviços Solicitados</th>
+                                <th class="p-4 w-[20%]">Serviços Solicitados</th>
                                 <th class="p-4 w-[15%]">Telefone</th>
                                 <th class="p-4 w-[12%]">Ação</th>
-                                <th class="p-4 w-[18%]" colspan="2">Horário / Controle</th>
+                                <th class="p-4 w-[23%]" colspan="2">Horário / Controle</th>
                             </tr>
                         </thead>
                         <tbody id="tabelaHoje" class="text-sm divide-y divide-stone-850"></tbody>
@@ -107,7 +107,7 @@
 
             <div class="bg-stone-900/40 border border-stone-800 rounded-2xl p-4 space-y-3">
                 <button onclick="toggleSecao('secaoAmanha', 'setaAmanha')" class="w-full flex items-center justify-between font-bold text-xs uppercase tracking-wider text-stone-400 hover:text-stone-200 transition-colors">
-                    <span>Amanhã</span>
+                    <span id="tituloAmanha">Amanhã</span>
                     <svg id="setaAmanha" xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 transition-transform duration-200" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
                 </button>
                 <div id="secaoAmanha" class="overflow-x-auto">
@@ -116,10 +116,10 @@
                             <tr class="bg-stone-950/40 text-stone-400 text-[11px] font-bold uppercase tracking-wider border-b border-stone-850">
                                 <th class="p-4 w-[18%]">Cliente</th>
                                 <th class="p-4 w-[12%]">Veículo</th>
-                                <th class="p-4 w-[25%]">Serviços Solicitados</th>
+                                <th class="p-4 w-[20%]">Serviços Solicitados</th>
                                 <th class="p-4 w-[15%]">Telefone</th>
                                 <th class="p-4 w-[12%]">Ação</th>
-                                <th class="p-4 w-[18%]" colspan="2">Horário / Controle</th>
+                                <th class="p-4 w-[23%]" colspan="2">Horário / Controle</th>
                             </tr>
                         </thead>
                         <tbody id="tabelaAmanha" class="text-sm divide-y divide-stone-850"></tbody>
@@ -138,10 +138,10 @@
                             <tr class="bg-stone-950/40 text-stone-400 text-[11px] font-bold uppercase tracking-wider border-b border-stone-850">
                                 <th class="p-4 w-[18%]">Cliente</th>
                                 <th class="p-4 w-[12%]">Veículo</th>
-                                <th class="p-4 w-[25%]">Serviços Solicitados</th>
+                                <th class="p-4 w-[20%]">Serviços Solicitados</th>
                                 <th class="p-4 w-[15%]">Telefone</th>
                                 <th class="p-4 w-[12%]">Ação</th>
-                                <th class="p-4 w-[18%]" colspan="2">Data / Hora / Controle</th>
+                                <th class="p-4 w-[23%]" colspan="2">Data / Hora / Controle</th>
                             </tr>
                         </thead>
                         <tbody id="tabelaSemana" class="text-sm divide-y divide-stone-850"></tbody>
@@ -160,10 +160,10 @@
                             <tr class="bg-stone-950/40 text-stone-400 text-[11px] font-bold uppercase tracking-wider border-b border-stone-850">
                                 <th class="p-4 w-[18%]">Cliente</th>
                                 <th class="p-4 w-[12%]">Veículo</th>
-                                <th class="p-4 w-[25%]">Serviços Solicitados</th>
+                                <th class="p-4 w-[20%]">Serviços Solicitados</th>
                                 <th class="p-4 w-[15%]">Telefone</th>
                                 <th class="p-4 w-[12%]">Ação</th>
-                                <th class="p-4 w-[18%]" colspan="2">Data / Hora / Controle</th>
+                                <th class="p-4 w-[23%]" colspan="2">Data / Hora / Controle</th>
                             </tr>
                         </thead>
                         <tbody id="tabelaFuturos" class="text-sm divide-y divide-stone-850"></tbody>
@@ -182,8 +182,9 @@
                             <tr class="bg-stone-950/20 text-stone-500 text-[11px] font-bold uppercase tracking-wider border-b border-stone-800/30">
                                 <th class="p-4 w-[20%]">Cliente</th>
                                 <th class="p-4 w-[15%]">Veículo</th>
-                                <th class="p-4 w-[30%]">Serviços Solicitados</th>
+                                <th class="p-4 w-[25%]">Serviços Solicitados</th>
                                 <th class="p-4 w-[20%]">Data / Horário</th>
+                                <th class="p-4 w-[20%]">Controle</th>
                             </tr>
                         </thead>
                         <tbody id="tabelaPassadosCorpo" class="text-sm divide-y divide-stone-800/30 text-stone-500"></tbody>

@@ -5,14 +5,14 @@ const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 // =========================================================================
-// 🛠️ CONFIGURAÇÃO CENTRALIZADA (Fácil de alterar dias, horários e vagas)
+//                             CONFIGURAÇÃO
 // =========================================================================
 const CONFIG_OFICINA = {
     limiteCaracteresOutros: 150, 
     servicos: [
         { id: "revisao", nome: "Revisão Geral (Troca de Óleo e Filtros)", preco: 150 },
         { id: "freios", nome: "Revisão de Freios/Pastilhas", preco: 250},
-        { id: "Suspensao", nome: "Troca de suspensão/amortecedores", preco: 400},
+        { id: "Suspensao", nome: "Revisão de suspensão/amortecedores", preco: 400},
         { id: "outros", nome: "Outros (Avaliação / Diagnóstico)", preco: 0 }
     ],
     
@@ -349,13 +349,24 @@ async function carregarPainelOficina() {
 
     const seteDiasDepois = new Date(agora); seteDiasDepois.setDate(agora.getDate() + 7);
     const seteDiasStr = seteDiasDepois.toISOString().split('T')[0];
-    
-    const horaAgoraStr = `${String(agora.getHours()).padStart(2, '0')}:${String(agora.getMinutes()).padStart(2, '0')}`;
+
+    // =========================================================================
+    // 🏷️ INJEÇÃO DINÂMICA DAS DATAS NOS TÍTULOS
+    // =========================================================================
+    const txtHojeFormatado = agora.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
+    const txtAmanhaFormatado = amanha.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
+
+    const elHoje = document.getElementById('tituloHoje');
+    if (elHoje) elHoje.innerText = `Ordens de Hoje - ${txtHojeFormatado}`;
+
+    const elAmanha = document.getElementById('tituloAmanha');
+    if (elAmanha) elAmanha.innerText = `Amanhã - ${txtAmanhaFormatado}`;
+    // =========================================================================
 
     if (!data || data.length === 0) {
-        const trVazio = '<tr><td colspan="6" class="p-4 text-center text-stone-500 text-xs">Nenhum veículo mapeado nesta régua.</td></tr>';
+        const trVazio = '<tr><td colspan="7" class="p-4 text-center text-stone-500 text-xs">Nenhum veículo mapeado nesta régua.</td></tr>';
         tHoje.innerHTML = trVazio; tAmanha.innerHTML = trVazio; tSemana.innerHTML = trVazio; tFuturos.innerHTML = trVazio;
-        tPassados.innerHTML = '<tr><td colspan="4" class="p-4 text-center text-stone-500 text-xs">Nenhum histórico mapeado.</td></tr>';
+        tPassados.innerHTML = '<tr><td colspan="5" class="p-4 text-center text-stone-500 text-xs">Nenhum histórico mapeado.</td></tr>';
         document.getElementById('faturamentoTotal').innerText = "R$ 0,00";
         renderizarGraficoOficina(metricas);
         return;
@@ -366,7 +377,7 @@ async function carregarPainelOficina() {
     data.forEach((ag, idx) => {
         const servicos = ag.servicos_selecionados ? ag.servicos_selecionados.split(', ') : [];
         let totalAgendamento = 0;
-        let linhasDetalhadas = [];
+        let linesDetalhadas = [];
 
         servicos.forEach(sName => {
             const config = CONFIG_OFICINA.servicos.find(s => s.nome === sName);
@@ -375,10 +386,10 @@ async function carregarPainelOficina() {
             totalAgendamento += preco;
 
             if (metricas[sName]) { metricas[sName].qtd += 1; metricas[sName].valor += preco; }
-            linhasDetalhadas.push(`${sName} (R$ ${preco.toFixed(2)})`);
+            linesDetalhadas.push(`${sName} (R$ ${preco.toFixed(2)})`);
         });
 
-        if (ag.detalhes_outros) linhasDetalhadas.push(`<span class="opacity-80">Sintomas: "${ag.detalhes_outros}"</span>`);
+        if (ag.detalhes_outros) linesDetalhadas.push(`<span class="opacity-80">Sintomas: "${ag.detalhes_outros}"</span>`);
 
         const foneLimpo = ag.cliente_telefone ? ag.cliente_telefone.replace(/\D/g, '') : '';
         const dataFormatada = ag.data.split('-').reverse().join('/');
@@ -388,7 +399,10 @@ async function carregarPainelOficina() {
         let blocoAlvo = "";
         let ehPassado = false;
 
-        if (ag.data < hojeStr || (ag.data === hojeStr && ag.horario < horaAgoraStr)) {
+        // =========================================================================
+        // 🔄 NOVA REGRA: Só vai para passado se a data for estritamente MENOR que hoje (D-1)
+        // =========================================================================
+        if (ag.data < hojeStr) {
             ehPassado = true;
             blocoAlvo = "passado";
             cPassados++;
@@ -414,16 +428,22 @@ async function carregarPainelOficina() {
         if (ehPassado) {
             tr.className = "cursor-pointer hover:bg-stone-900/20 border-b border-stone-900/30 text-stone-500";
             tr.innerHTML = `
-                <td class="p-4 opacity-60 font-medium">${ag.cliente_nome}</td>
-                <td class="p-4 text-xs opacity-60">${ag.veiculo_modelo}</td>
-                <td class="p-4 text-xs truncate max-w-[180px] opacity-60">${ag.servicos_selecionados || ''}</td>
-                <td class="p-4 text-xs">${dataFormatada} às ${ag.horario}</td>
+                <td class="p-4 opacity-60 font-medium break-words max-w-[150px]" onclick="document.getElementById('${trDet.id}').classList.toggle('hidden')">${ag.cliente_nome}</td>
+                <td class="p-4 text-xs opacity-60" onclick="document.getElementById('${trDet.id}').classList.toggle('hidden')">${ag.veiculo_modelo}</td>
+                <td class="p-4 text-xs opacity-60" onclick="document.getElementById('${trDet.id}').classList.toggle('hidden')">
+                    <span class="truncate block max-w-[180px]" title="${ag.servicos_selecionados || ''}">${ag.servicos_selecionados || ''}</span>
+                </td>
+                <td class="p-4 text-xs select-all" onclick="document.getElementById('${trDet.id}').classList.toggle('hidden')">${dataFormatada} às ${ag.horario}</td>
+                <td class="p-4 text-center whitespace-nowrap">
+                    <button onclick="removerAgendamento('${ag.id}', '${ag.cliente_nome}')" class="text-[11px] bg-stone-950 border border-stone-800 text-stone-400 hover:text-red-500 hover:border-red-900/60 px-2.5 py-1 rounded-lg font-medium transition-all">
+                        Excluir
+                    </button>
+                </td>
             `;
-            tr.onclick = () => trDet.classList.toggle('hidden');
             trDet.innerHTML = `
-                <td colspan="4" class="p-4 text-xs">
+                <td colspan="5" class="p-4 text-xs">
                     <div class="bg-stone-950/20 p-3 rounded-lg border border-stone-900/40 font-mono">
-                        ${linhasDetalhadas.join('<br>')}
+                        ${linesDetalhadas.join('<br>')}
                         <div class="mt-2 pt-2 border-t border-stone-900/40 font-bold text-stone-400">Total: R$ ${totalAgendamento.toFixed(2)}</div>
                     </div>
                 </td>
@@ -434,31 +454,28 @@ async function carregarPainelOficina() {
             tr.className = "cursor-pointer hover:bg-stone-900/40 border-b border-stone-800/40 transition-colors";
             
             const tdDataHora = (blocoAlvo === 'hoje' || blocoAlvo === 'amanha') 
-                ? `<td class="p-4 font-semibold text-stone-100 text-sm">${ag.horario}</td>`
-                : `<td class="p-4 text-stone-300 text-xs font-medium">${dataFormatada}<br><span class="text-stone-100 font-semibold text-sm">${ag.horario}</span></td>`;
+                ? `<td class="p-4 font-semibold text-stone-100 text-sm whitespace-nowrap">${ag.horario}</td>`
+                : `<td class="p-4 text-stone-300 text-xs font-medium whitespace-nowrap">${dataFormatada}<br><span class="text-stone-100 font-semibold text-sm">${ag.horario}</span></td>`;
 
-            // ALTERAÇÃO EXECUTADA AQUI:
-            // 1. A coluna de Serviços ganhou um max-w-[190px] para comprimir sem espremer a tabela.
-            // 2. Criada uma nova célula <td> dedicada puramente ao número de telefone em texto cor âmbar limpo.
             tr.innerHTML = `
-                <td class="p-4 font-medium text-stone-200" onclick="document.getElementById('${trDet.id}').classList.toggle('hidden')">
+                <td class="p-4 font-medium text-stone-200 break-words max-w-[150px]" onclick="document.getElementById('${trDet.id}').classList.toggle('hidden')">
                     ${ag.cliente_nome}
                 </td>
                 <td class="p-4 text-stone-300 text-xs" onclick="document.getElementById('${trDet.id}').classList.toggle('hidden')">${ag.veiculo_modelo}</td>
                 <td class="p-4 text-xs text-stone-400" onclick="document.getElementById('${trDet.id}').classList.toggle('hidden')">
                     <span class="truncate block max-w-[190px]" title="${ag.servicos_selecionados || ''}">${ag.servicos_selecionados || ''}</span>
                 </td>
-                <td class="p-4 text-xs text-amber-500 font-mono font-medium select-all" title="Clique duas vezes para copiar o número">
+                <td class="p-4 text-xs text-stone-400 font-mono font-medium select-all whitespace-nowrap" title="Clique duas vezes para copiar o número">
                     ${ag.cliente_telefone || 'Sem número'}
                 </td>
-                <td class="p-4">
+                <td class="p-4 whitespace-nowrap">
                     <a href="${urlWhats}" target="_blank" class="inline-flex items-center space-x-1 bg-emerald-950 text-emerald-400 border border-emerald-800 px-2.5 py-1 rounded-lg text-[11px] font-bold hover:bg-emerald-900 transition-colors">
                         <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
                         <span>Confirmar</span>
                     </a>
                 </td>
                 ${tdDataHora}
-                <td class="p-4 text-center">
+                <td class="p-4 text-center whitespace-nowrap">
                     <button onclick="removerAgendamento('${ag.id}', '${ag.cliente_nome}')" class="text-[11px] bg-stone-950 border border-stone-800 text-stone-400 hover:text-red-500 hover:border-red-900/60 px-2.5 py-1 rounded-lg font-medium transition-all">
                         Ausente / Excluir
                     </button>
@@ -469,7 +486,7 @@ async function carregarPainelOficina() {
                 <td colspan="7" class="p-4 text-xs">
                     <div class="bg-stone-900/60 p-3 rounded-lg border border-stone-800 space-y-2">
                         <p class="font-bold text-red-600 uppercase text-[10px]">Detalhamento Técnico:</p>
-                        <div class="font-mono text-stone-300 space-y-1">${linhasDetalhadas.join('<br>')}</div>
+                        <div class="font-mono text-stone-300 space-y-1">${linesDetalhadas.join('<br>')}</div>
                         <div class="border-t border-stone-800 pt-2 flex justify-between font-bold text-sm">
                             <span class="text-stone-400">Total Previsto:</span>
                             <span class="text-emerald-400">R$ ${totalAgendamento.toFixed(2).replace('.', ',')}</span>
@@ -490,7 +507,7 @@ async function carregarPainelOficina() {
     if (cAmanha === 0) tAmanha.innerHTML = stringVazia;
     if (cSemana === 0) tSemana.innerHTML = stringVazia;
     if (cFuturos === 0) tFuturos.innerHTML = stringVazia;
-    if (cPassados === 0) tPassados.innerHTML = '<tr><td colspan="4" class="p-4 text-center text-stone-600 text-xs">Nenhum histórico registrado.</td></tr>';
+    if (cPassados === 0) tPassados.innerHTML = '<tr><td colspan="5" class="p-4 text-center text-stone-600 text-xs">Nenhum histórico registrado.</td></tr>';
 
     document.getElementById('faturamentoTotal').innerText = `R$ ${faturamentoTotal.toFixed(2).replace('.', ',')}`;
     renderizarGraficoOficina(metricas);

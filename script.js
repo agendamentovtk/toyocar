@@ -12,12 +12,10 @@ const CONFIG_OFICINA = {
     servicos: [
         { id: "revisao", nome: "Revisão Geral (Troca de Óleo e Filtros)", preco: 150 },
         { id: "freios", nome: "Revisão de Freios/Pastilhas", preco: 250},
-        { id: "Suspensao", nome: "Troca de suspensão/amortecedores", preco: 350},
+        { id: "Suspensao", nome: "Troca de suspensão/amortecedores", preco: 400},
         { id: "outros", nome: "Outros (Avaliação / Diagnóstico)", preco: 0 }
     ],
     
-    // Configuração de dias de funcionamento e horários específicos por dia
-    // 0 = Domingo, 1 = Segunda, 2 = Terça, 3 = Quarta, 4 = Quinta, 5 = Sexta, 6 = Sábado
     diasTrabalho: {
         1: ["08:00", "09:00", "10:00", "11:00", "13:30", "14:00", "15:00", "16:00", "17:00"], // Segunda
         2: ["08:00", "09:00", "10:00", "11:00", "13:30", "14:00", "15:00", "16:00", "17:00"], // Terça
@@ -25,14 +23,12 @@ const CONFIG_OFICINA = {
         4: ["08:00", "09:00", "10:00", "11:00", "13:30", "14:00", "15:00", "16:00", "17:00"], // Quinta
         5: ["08:00", "09:00", "10:00", "11:00", "13:30", "14:00", "15:00", "16:00", "17:00"], // Sexta
         6: ["08:00", "09:00", "10:00", "11:00"]                                              // Sábado
-        // 0 e 5 (Domingo) não listados significa que a oficina estará fechada!
     },
 
-    // Capacidade de carros simultâneos por faixa de horário (caso queira limitar individualmente)
-    capacidadeVagasPadrao: 3, // Quantos elevadores/mânicos livres por horário
+    capacidadeVagasPadrao: 3, 
     vagasExcecaoPorHora: {
-        "11:00": 1, // Exemplo: se às 11:00 o ritmo diminui por causa do almoço
-        "17:00": 1  // Exemplo: fim do expediente
+        "11:00": 1, 
+        "17:00": 1  
     }
 };
 
@@ -46,18 +42,29 @@ function inicializarCliente() {
     renderizarServicosCliente();
     
     const dataInput = document.getElementById('dataAgendamento');
-    // Bloqueia datas passadas no calendário nativo
-    dataInput.min = new Date().toISOString().split('T')[0];
+    if (dataInput) {
+        dataInput.min = new Date().toISOString().split('T')[0];
+        dataInput.addEventListener('change', buscarVagasDisponiveis);
+    }
     
-    dataInput.addEventListener('change', buscarVagasDisponiveis);
     document.getElementById('formOficina').addEventListener('submit', enviarAgendamento);
 
-    // Máscara Reativa de Telefone (DD) XXXXX-XXXX
-    const telInput = document.getElementById('telefone');
-    telInput.addEventListener('input', (e) => {
-        let x = e.target.value.replace(/\D/g, '').match(/(\d{0,2})(\d{0,5})(\d{0,4})/);
-        e.target.value = !x[2] ? x[1] : '(' + x[1] + ') ' + x[2] + (x[3] ? '-' + x[3] : '');
-    });
+    // 🔥 MÁSCARA APERFEIÇOADA: Formata em tempo real no padrão (XX) XXXXX-XXXX
+    const telInput = document.getElementById('telefoneCliente');
+    if (telInput) {
+        telInput.addEventListener('input', (e) => {
+            let num = e.target.value.replace(/\D/g, "");
+            if (num.length > 11) num = num.slice(0, 11); // Limita o máximo de dígitos
+            
+            if (num.length > 6) {
+                e.target.value = `(${num.slice(0, 2)}) ${num.slice(2, 7)}-${num.slice(7)}`;
+            } else if (num.length > 2) {
+                e.target.value = `(${num.slice(0, 2)}) ${num.slice(2)}`;
+            } else if (num.length > 0) {
+                e.target.value = `(${num}`;
+            }
+        });
+    }
 }
 
 function renderizarServicosCliente() {
@@ -87,6 +94,8 @@ function renderizarServicosCliente() {
 function toggleCaixaOutros() {
     const checkboxes = document.querySelectorAll('input[name="servicos"]:checked');
     const containerTextarea = document.getElementById('wrapperOutros');
+    if (!containerTextarea) return;
+    
     let selecionouOutros = false;
     checkboxes.forEach(cb => { if (cb.value.includes("Outros")) selecionouOutros = true; });
 
@@ -101,18 +110,15 @@ async function buscarVagasDisponiveis() {
 
     container.innerHTML = '<p class="text-xs text-stone-500 col-span-full text-center">Calculando vagas na oficina...</p>';
 
-    // Descobrir o dia da semana da data selecionada (ajustando fuso horário)
     const partesData = dataSelecionada.split('-');
     const objetoData = new Date(partesData[0], partesData[1] - 1, partesData[2]);
     const diaSemana = objetoData.getDay(); 
 
-    // Verifica se a oficina trabalha no dia escolhido
     if (!CONFIG_OFICINA.diasTrabalho[diaSemana]) {
         container.innerHTML = '<p class="text-xs text-amber-500 col-span-full text-center py-2">A oficina não possui expediente neste dia (Fechado).</p>';
         return;
     }
 
-    // Busca os horários configurados para aquele dia específico
     const horariosDoDia = CONFIG_OFICINA.diasTrabalho[diaSemana];
 
     const { data: agendados, error } = await supabaseClient
@@ -129,7 +135,6 @@ async function buscarVagasDisponiveis() {
     let encontrouHorario = false;
 
     horariosDoDia.forEach(hora => {
-        // Define dinamicamente o limite de vagas para aquela hora
         const limiteVagas = CONFIG_OFICINA.vagasExcecaoPorHora[hora] !== undefined 
             ? CONFIG_OFICINA.vagasExcecaoPorHora[hora] 
             : CONFIG_OFICINA.capacidadeVagasPadrao;
@@ -164,13 +169,18 @@ async function enviarAgendamento(e) {
     if (checkboxes.length === 0) { alert("Escolha pelo menos um motivo para o agendamento!"); return; }
 
     const listaServicos = Array.from(checkboxes).map(cb => cb.value).join(', ');
+    const horaSelecionada = document.querySelector('input[name="horario"]:checked');
+    
+    if (!horaSelecionada) { alert("Selecione um horário para o atendimento!"); return; }
+
     const dados = {
         cliente_nome: document.getElementById('nome').value,
+        cliente_telefone: document.getElementById('telefoneCliente').value,
         veiculo_modelo: document.getElementById('modelo').value,
         servicos_selecionados: listaServicos,
         detalhes_outros: document.getElementById('detalhesOutros').value,
         data: document.getElementById('dataAgendamento').value,
-        horario: document.querySelector('input[name="horario"]:checked').value
+        horario: horaSelecionada.value
     };
 
     const { error } = await supabaseClient.from('agendamentos_oficina').insert([dados]);
@@ -178,64 +188,75 @@ async function enviarAgendamento(e) {
     if (error) {
         alert("Erro no agendamento: " + error.message);
     } else {
-        // --- ANTES: Usava alert() nativo. AGORA: Usa o Modal Premium ---
         const dataFormatada = dados.data.split('-').reverse().join('/');
-        const msgModal = `Olá <strong>${dados.cliente_nome}</strong>, seu veículo <strong>${dados.veiculo_modelo}</strong> foi mapeado para o dia <strong>${dataFormatada}</strong> às <strong class="text-red-500">${dados.horario}</strong>.`;
         
-        document.getElementById('modalMensagemTexto').innerHTML = msgModal;
+        // Retaguarda de segurança: só altera os elementos se eles existirem na página atual (evita crash local)
+        const modalMsg = document.getElementById('modalMensagemTexto');
+        if (modalMsg) {
+            modalMsg.innerHTML = `Olá <strong>${dados.cliente_nome}</strong>, seu veículo <strong>${dados.veiculo_modelo}</strong> foi mapeado para o dia <strong>${dataFormatada}</strong> às <strong class="text-red-500">${dados.horario}</strong>.`;
+        }
         
-        // Configura o link direto do Google Agenda no botão do modal
-        const urlCalendario = gerarUrlCalendarioUniversal(dados.cliente_nome, dados.data, dados.horario, listaServicos);
-        document.getElementById('btnAdicionarAgenda').href = urlCalendario;
+        const btnAgenda = document.getElementById('btnAdicionarAgenda');
+        if (btnAgenda) {
+            const urlCalendario = gerarUrlCalendarioUniversal(dados.cliente_nome, dados.data, dados.horario, listaServicos);
+            btnAgenda.href = urlCalendario;
+        }
 
-        // Exibe o modal na tela tirando a classe 'hidden'
-        document.getElementById('modalSucesso').classList.remove('hidden');
+        const modalContainer = document.getElementById('modalSucesso');
+        if (modalContainer) {
+            modalContainer.classList.remove('hidden');
+        } else {
+            alert(`Vaga Reservada!\nOlá ${dados.cliente_nome}, agendado para ${dataFormatada} às ${dados.horario}.`);
+        }
 
-        // Limpa o formulário de fundo de forma limpa
+        // Reseta o layout de fundo de forma limpa
         document.getElementById('formOficina').reset();
-        document.getElementById('wrapperOutros').classList.add('hidden');
-        document.getElementById('vagasContainer').innerHTML = '<p class="text-xs text-stone-500 col-span-full text-center py-2">Selecione uma data para checar as vagas.</p>';
+        const wrapperOutros = document.getElementById('wrapperOutros');
+        if (wrapperOutros) wrapperOutros.classList.add('hidden');
+        
+        const vagasContainer = document.getElementById('vagasContainer');
+        if (vagasContainer) vagasContainer.innerHTML = '<p class="text-xs text-stone-500 col-span-full text-center py-2">Selecione uma data para checar as vagas.</p>';
     }
 }
 
-// --- NOVA FUNÇÃO: GERA LINK DIRETO PARA O GOOGLE AGENDA (SEM ARQUIVO) ---
-// --- FUNÇÃO: GERA LINK UNIVERSAL QUE ABRE O APP PADRÃO DE CALENDÁRIO DO CELULAR ---
 function gerarUrlCalendarioUniversal(nome, dataStr, horarioStr, servicos) {
-    // Monta o objeto de data inicial (Ano, Mês [0-11], Dia, Hora, Minuto)
     const partesData = dataStr.split('-');
     const partesHora = horarioStr.split(':');
     
     const dataInicio = new Date(partesData[0], partesData[1] - 1, partesData[2], partesHora[0], partesHora[1]);
-    const dataFim = new Date(dataInicio.getTime() + 60 * 60 * 1000); // 1 hora de duração padrão
+    const dataFim = new Date(dataInicio.getTime() + 60 * 60 * 1000); 
 
-    // Formata as datas no padrão exigido pelo protocolo iCalendar (AAAAMMDDTHHMMSSZ)
-    const formatarDataICS = (d) => d.toISOString().replace(/-|:|\.\d+/g, '');
+    const formatarDataICS = (d) => {
+        const pad = (n) => String(n).padStart(2, '0');
+        return `${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}T${pad(d.getHours())}${pad(d.getMinutes())}00`;
+    };
     
-    // Cria a estrutura padrão de um arquivo .ics (iCalendar)
     const icsContent = [
         "BEGIN:VCALENDAR",
         "VERSION:2.0",
         "PRODID:-//TOYOCAR//Agendamento//PT",
+        "CALSCALE:GREGORIAN",
         "BEGIN:VEVENT",
-        `UID:${Date.now()}@toyocar.com`, // Identificador único do evento
+        `UID:${Date.now()}@toyocar.com`,
         `DTSTART:${formatarDataICS(dataInicio)}`,
         `DTEND:${formatarDataICS(dataFim)}`,
         `SUMMARY:Manutenção TOYOCAR - ${nome}`,
-        `DESCRIPTION:Serviços: ${servicos}.\\nPor favor\\, comparecer com o veículo no horário marcado.`,
-        "LOCATION:Oficina Mecânica TOYOCAR",
+        `DESCRIPTION:Servicos: ${servicos}.\\nPor favor\\, comparecer com o veiculo no horario marcado.`,
+        "LOCATION:Oficina Mecanica TOYOCAR",
+        "SEQUENCE:0",
+        "STATUS:CONFIRMED",
+        "TRANSP:OPAQUE",
         "END:VEVENT",
         "END:VCALENDAR"
     ].join("\r\n");
 
-    // Codifica o conteúdo em Base64 para que o navegador entenda como um link de dados direto,
-    // eliminando a necessidade de criar e baixar um arquivo físico na pasta de downloads.
-    const base64Content = btoa(unescape(encodeURIComponent(icsContent)));
-    return `data:text/calendar;charset=utf-8;base64,${base64Content}`;
+    const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8;' });
+    return URL.createObjectURL(blob);
 }
 
-// --- FUNÇÃO PARA FECHAR O MODAL ---
 function fecharModalSucesso() {
-    document.getElementById('modalSucesso').classList.add('hidden');
+    const modal = document.getElementById('modalSucesso');
+    if (modal) modal.classList.add('hidden');
 }
 
 // --- PAINEL ADMINISTRATIVO (DASHBOARD) ---
@@ -287,7 +308,9 @@ async function logarOficina(e) {
 }
 
 async function carregarPainelOficina() {
-    const mes = document.getElementById('filtroMes').value;
+    const filtroElemento = document.getElementById('filtroMes');
+    if (!filtroElemento) return;
+    const mes = filtroElemento.value;
     if (!mes) return;
 
     const partes = mes.split('-');
@@ -309,6 +332,8 @@ async function carregarPainelOficina() {
     const tSemana = document.getElementById('tabelaSemana');
     const tFuturos = document.getElementById('tabelaFuturos');
     const tPassados = document.getElementById('tabelaPassadosCorpo');
+
+    if(!tHoje) return; 
 
     tHoje.innerHTML = ''; tAmanha.innerHTML = ''; tSemana.innerHTML = ''; tFuturos.innerHTML = ''; tPassados.innerHTML = '';
     
@@ -339,7 +364,7 @@ async function carregarPainelOficina() {
     let [cHoje, cAmanha, cSemana, cFuturos, cPassados] = [0, 0, 0, 0, 0];
 
     data.forEach((ag, idx) => {
-        const servicos = ag.servicos_selecionados.split(', ');
+        const servicos = ag.servicos_selecionados ? ag.servicos_selecionados.split(', ') : [];
         let totalAgendamento = 0;
         let linhasDetalhadas = [];
 
@@ -355,7 +380,7 @@ async function carregarPainelOficina() {
 
         if (ag.detalhes_outros) linhasDetalhadas.push(`<span class="opacity-80">Sintomas: "${ag.detalhes_outros}"</span>`);
 
-        const foneLimpo = ag.cliente_telefone.replace(/\D/g, '');
+        const foneLimpo = ag.cliente_telefone ? ag.cliente_telefone.replace(/\D/g, '') : '';
         const dataFormatada = ag.data.split('-').reverse().join('/');
         const mensagemWhats = encodeURIComponent(`Olá ${ag.cliente_nome}, tudo bem? Gostaria de relembrar sobre a revisão do seu veículo agendada na TOYOCAR para o dia ${dataFormatada} às ${ag.horario}. Podemos confirmar sua presença?`);
         const urlWhats = `https://api.whatsapp.com/send?phone=55${foneLimpo}&text=${mensagemWhats}`;
@@ -391,7 +416,7 @@ async function carregarPainelOficina() {
             tr.innerHTML = `
                 <td class="p-4 opacity-60 font-medium">${ag.cliente_nome}</td>
                 <td class="p-4 text-xs opacity-60">${ag.veiculo_modelo}</td>
-                <td class="p-4 text-xs truncate max-w-[180px] opacity-60">${ag.servicos_selecionados}</td>
+                <td class="p-4 text-xs truncate max-w-[180px] opacity-60">${ag.servicos_selecionados || ''}</td>
                 <td class="p-4 text-xs">${dataFormatada} às ${ag.horario}</td>
             `;
             tr.onclick = () => trDet.classList.toggle('hidden');
@@ -409,15 +434,23 @@ async function carregarPainelOficina() {
             tr.className = "cursor-pointer hover:bg-stone-900/40 border-b border-stone-800/40 transition-colors";
             
             const tdDataHora = (blocoAlvo === 'hoje' || blocoAlvo === 'amanha') 
-                ? `<td class="p-4 font-semibold text-red-500 text-sm">${ag.horario}</td>`
-                : `<td class="p-4 text-stone-300 text-xs font-medium">${dataFormatada}<br><span class="text-red-500 font-semibold text-sm">${ag.horario}</span></td>`;
+                ? `<td class="p-4 font-semibold text-stone-100 text-sm">${ag.horario}</td>`
+                : `<td class="p-4 text-stone-300 text-xs font-medium">${dataFormatada}<br><span class="text-stone-100 font-semibold text-sm">${ag.horario}</span></td>`;
 
+            // ALTERAÇÃO EXECUTADA AQUI:
+            // 1. A coluna de Serviços ganhou um max-w-[190px] para comprimir sem espremer a tabela.
+            // 2. Criada uma nova célula <td> dedicada puramente ao número de telefone em texto cor âmbar limpo.
             tr.innerHTML = `
                 <td class="p-4 font-medium text-stone-200" onclick="document.getElementById('${trDet.id}').classList.toggle('hidden')">
-                    ${ag.cliente_nome}<br><span class="text-[10px] text-stone-400">${ag.cliente_telefone}</span>
+                    ${ag.cliente_nome}
                 </td>
                 <td class="p-4 text-stone-300 text-xs" onclick="document.getElementById('${trDet.id}').classList.toggle('hidden')">${ag.veiculo_modelo}</td>
-                <td class="p-4 text-xs text-stone-400 truncate max-w-[160px]" onclick="document.getElementById('${trDet.id}').classList.toggle('hidden')">${ag.servicos_selecionados}</td>
+                <td class="p-4 text-xs text-stone-400" onclick="document.getElementById('${trDet.id}').classList.toggle('hidden')">
+                    <span class="truncate block max-w-[190px]" title="${ag.servicos_selecionados || ''}">${ag.servicos_selecionados || ''}</span>
+                </td>
+                <td class="p-4 text-xs text-amber-500 font-mono font-medium select-all" title="Clique duas vezes para copiar o número">
+                    ${ag.cliente_telefone || 'Sem número'}
+                </td>
                 <td class="p-4">
                     <a href="${urlWhats}" target="_blank" class="inline-flex items-center space-x-1 bg-emerald-950 text-emerald-400 border border-emerald-800 px-2.5 py-1 rounded-lg text-[11px] font-bold hover:bg-emerald-900 transition-colors">
                         <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
@@ -433,7 +466,7 @@ async function carregarPainelOficina() {
             `;
 
             trDet.innerHTML = `
-                <td colspan="6" class="p-4 text-xs">
+                <td colspan="7" class="p-4 text-xs">
                     <div class="bg-stone-900/60 p-3 rounded-lg border border-stone-800 space-y-2">
                         <p class="font-bold text-red-600 uppercase text-[10px]">Detalhamento Técnico:</p>
                         <div class="font-mono text-stone-300 space-y-1">${linhasDetalhadas.join('<br>')}</div>
@@ -452,7 +485,7 @@ async function carregarPainelOficina() {
         }
     });
 
-    const stringVazia = '<tr><td colspan="6" class="p-4 text-center text-stone-600 text-xs">Nenhum veículo nesta listagem.</td></tr>';
+    const stringVazia = '<tr><td colspan="7" class="p-4 text-center text-stone-600 text-xs">Nenhum veículo nesta listagem.</td></tr>';
     if (cHoje === 0) tHoje.innerHTML = stringVazia;
     if (cAmanha === 0) tAmanha.innerHTML = stringVazia;
     if (cSemana === 0) tSemana.innerHTML = stringVazia;
@@ -490,7 +523,7 @@ function renderizarGraficoOficina(metricas) {
     if (!legenda) return;
     legenda.innerHTML = '';
 
-    const labels = []; const dados = []; const cores = ['#33b310', '#3b82f6', '#eab308', '#f12df1'];
+    const labels = []; const dados = []; const cores = ['#48c281', '#af7d40', '#e4c244', '#d27945'];
 
     Object.keys(metricas).forEach((name, i) => {
         const item = metricas[name]; labels.push(name); dados.push(item.qtd);
@@ -523,3 +556,12 @@ function renderizarGraficoOficina(metricas) {
 }
 
 async function deslogar() { await supabaseClient.auth.signOut(); verificarSessaoOficina(); }
+
+document.addEventListener("DOMContentLoaded", () => {
+    inicializarCliente();
+    if (document.getElementById('loginSection')) {
+        verificarSessaoOficina();
+        document.getElementById('formLoginOficina').addEventListener('submit', logarOficina);
+        document.getElementById('filtroMes').addEventListener('change', carregarPainelOficina);
+    }
+});

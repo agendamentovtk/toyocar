@@ -13,169 +13,168 @@
 
     <div id="loginSection" class="fixed inset-0 bg-stone-950 flex items-center justify-center p-4 z-50">
         <div class="w-full max-w-sm bg-stone-900 border border-stone-800 rounded-2xl p-6 space-y-4 shadow-2xl">
-            <img src="images/logo.png" alt="Logo TOYOCAR" class="mx-auto h-10 object-contain mb-2">
-            <h2 class="text-xs font-bold text-red-600 uppercase tracking-wider text-center">Acesso Gerencial Oficina</h2>
-            <form id="loginForm" class="space-y-3">
-                <input type="email" id="loginEmail" placeholder="E-mail" required class="w-full bg-stone-950 border border-stone-800 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-red-600">
-                <input type="password" id="loginSenha" placeholder="Senha" required class="w-full bg-stone-950 border border-stone-800 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-red-600">
-                <button type="submit" class="w-full bg-red-600 text-stone-950 font-bold py-3.5 rounded-xl text-xs uppercase tracking-wider hover:bg-red-700 transition-colors">Entrar no Painel</button>
+            <div class="text-center">
+                <img src="images/logo.png" alt="Logo TOYOCAR" class="mx-auto h-10 object-contain mb-2">
+                <h2 class="text-md font-black uppercase tracking-wider text-red-600">Painel Administrativo</h2>
+                <p class="text-xs text-stone-400 mt-1">Insira suas credenciais para gerenciar a oficina.</p>
+            </div>
+            <form id="formLoginOficina" class="space-y-3">
+                <div>
+                    <label class="block text-[10px] uppercase font-bold text-stone-400 tracking-wider mb-1">E-mail Corporativo</label>
+                    <input type="email" id="loginEmail" required placeholder="admin@toyocar.com" class="w-full bg-stone-950 border border-stone-850 rounded-xl px-3.5 py-2.5 text-sm text-stone-100 placeholder-stone-600 focus:outline-none transition-all">
+                </div>
+                <div>
+                    <label class="block text-[10px] uppercase font-bold text-stone-400 tracking-wider mb-1">Senha de Acesso</label>
+                    <input type="password" id="loginSenha" required placeholder="••••••••" class="w-full bg-stone-950 border border-stone-850 rounded-xl px-3.5 py-2.5 text-sm text-stone-100 placeholder-stone-600 focus:outline-none transition-all">
+                </div>
+                <button type="submit" class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-2.5 rounded-xl text-xs uppercase tracking-wider transition-colors shadow-lg shadow-red-950/30 pt-3">
+                    Entrar no Sistema
+                </button>
             </form>
         </div>
     </div>
 
-    <div id="dashboardSection" class="hidden max-w-6xl mx-auto p-6 space-y-6">
+    <div id="dashboardSection" class="hidden container mx-auto max-w-5xl px-4 py-6 space-y-6">
         
-        <div class="w-full flex justify-center pt-2 pb-4 border-b border-stone-900/60">
-            <img src="images/logo.png" alt="TOYOCAR" class="h-12 object-contain">
-        </div>
-
-        <header class="flex justify-between items-center pb-2">
-            <div>
-                <h1 class="text-xl font-black text-red-600 uppercase tracking-wide">Controle de Fluxo</h1>
-                <p class="text-xs text-stone-400">Gerenciamento inteligente de entrada e confirmação de clientes.</p>
+        <header class="flex flex-col sm:flex-row justify-between items-center bg-stone-900/40 border border-stone-800/60 p-4 rounded-2xl gap-4 backdrop-blur-sm">
+            <div class="flex items-center space-x-4">
+                <img src="images/logo.png" alt="Logo TOYOCAR" class="h-9 object-contain">
+                <div class="border-l border-stone-800 pl-4">
+                    <h1 class="text-md font-black uppercase tracking-wider text-stone-100">Controle Operacional</h1>
+                    <p class="text-[11px] text-stone-400 font-medium">Vagas Agendadas</p>
+                </div>
             </div>
-            <button onclick="deslogar()" class="text-xs bg-stone-800 hover:bg-red-900 px-4 py-2 rounded-xl font-medium transition-colors">Sair</button>
+            
+            <div class="flex items-center space-x-3 w-full sm:w-auto justify-end">
+                <select id="filtroMes" class="bg-stone-950 border border-stone-800 text-stone-200 rounded-xl px-3 py-2 text-xs font-bold focus:outline-none cursor-pointer hover:border-stone-700 transition-colors">
+                    </select>
+                <button onclick="deslogar()" class="bg-stone-950 border border-stone-850 text-stone-400 hover:text-red-500 hover:border-red-900/40 px-3 py-2 rounded-xl text-xs font-bold transition-all">
+                    Sair
+                </button>
+            </div>
         </header>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div class="bg-stone-900/90 border border-stone-800 p-4 rounded-xl flex flex-col justify-between backdrop-blur-sm">
-                <span class="text-[10px] font-bold uppercase tracking-wider text-stone-400">Projeção Mínima Garantida (Mês)</span>
-                <div class="flex items-baseline space-x-2 mt-2">
-                    <span class="text-3xl font-black text-emerald-400" id="faturamentoTotal">R$ 0,00</span>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div class="bg-stone-900/40 border border-stone-800 p-5 rounded-2xl flex flex-col justify-between space-y-4">
+                <div>
+                    <p class="text-[10px] uppercase font-bold tracking-widest text-stone-500">Previsão Bruta (Mês)</p>
+                    <h3 id="faturamentoTotal" class="text-3xl font-black text-emerald-400 tracking-tight mt-1">R$ 0,00</h3>
                 </div>
+                <p class="text-[11px] text-stone-400 leading-relaxed">
+                    Soma baseada nos valores dos serviços selecionados para o período filtrado.
+                </p>
             </div>
 
-            <div class="bg-stone-900/90 border border-stone-800 p-4 rounded-xl flex flex-col justify-between relative group backdrop-blur-sm">
-                <label for="filtroMes" class="text-[10px] font-bold uppercase tracking-wider text-stone-400 mb-2 block">Filtrar Ordens</label>
-                <div class="relative">
-                    <select id="filtroMes" onchange="carregarPainelOficina()" class="w-full bg-stone-950 border border-stone-800 rounded-xl px-4 py-3 text-sm text-stone-100 focus:outline-none focus:border-red-600 cursor-pointer appearance-none pr-10 font-medium">
-                    </select>
-                    <div class="absolute inset-y-0 right-0 flex items-center pr-4 pointer-events-none text-red-600">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-                        </svg>
+            <div class="md:col-span-2 bg-stone-900/40 border border-stone-800 p-5 rounded-2xl grid grid-cols-1 sm:grid-cols-5 gap-4 items-center">
+                <div class="sm:col-span-2 relative max-w-[140px] mx-auto w-full">
+                    <canvas id="graficoServicos"></canvas>
+                    <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none mt-1">
+                        <span class="text-[10px] uppercase tracking-widest font-bold text-stone-500">Geral</span>
+                        <span class="text-xs font-mono font-bold text-stone-300">Demanda</span>
                     </div>
                 </div>
-            </div>
-        </div>
-
-        <div class="bg-stone-900/90 border border-stone-800 p-6 rounded-xl backdrop-blur-sm">
-            <h3 class="text-[10px] font-bold uppercase tracking-wider text-stone-400 mb-4">Participação de Demandas</h3>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 items-center">
-                <div class="relative max-w-[150px] mx-auto w-full"><canvas id="graficoServicos"></canvas></div>
-                <div class="md:col-span-2"><div id="legendaGrafico" class="grid grid-cols-1 sm:grid-cols-2 gap-2"></div></div>
+                <div id="legendaGrafico" class="sm:col-span-3 grid grid-cols-1 gap-1.5 max-h-[150px] overflow-y-auto pr-1">
+                    </div>
             </div>
         </div>
 
         <div class="space-y-4">
-            
-            <div class="bg-stone-900/90 border border-stone-800 rounded-xl overflow-hidden shadow-xl backdrop-blur-sm">
-                <button onclick="toggleSecao('secaoHoje', 'setaHoje')" class="w-full bg-stone-950/80 px-4 py-3.5 flex justify-between items-center border-b border-stone-800 hover:bg-stone-900/60 transition-colors text-left">
+
+            <div class="bg-stone-900/40 border border-stone-800 rounded-2xl p-4 space-y-3">
+                <button onclick="toggleSecao('secaoHoje', 'setaHoje')" class="w-full flex items-center justify-between font-bold text-xs uppercase tracking-wider text-stone-400 hover:text-stone-200 transition-colors">
                     <div class="flex items-center space-x-2">
                         <span class="w-2 h-2 rounded-full bg-red-600 animate-pulse"></span>
-                        <h2 class="text-xs font-black uppercase tracking-wider text-stone-200">Agendamentos de Hoje</h2>
+                        <span>Ordens de Hoje</span>
                     </div>
-                    <svg id="setaHoje" xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-stone-400 transition-transform duration-200" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
+                    <svg id="setaHoje" xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 transition-transform duration-200" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
                 </button>
                 <div id="secaoHoje" class="overflow-x-auto">
-                    <table class="w-full text-left border-collapse min-w-[700px]">
+                    <table class="w-full text-left border-collapse min-w-[780px]">
                         <thead>
-                            <tr class="bg-stone-950/40 text-stone-400 text-[11px] font-bold uppercase tracking-wider border-b border-stone-800/50">
-                                <th class="p-4 w-[20%]">Cliente</th>
-                                <th class="p-4 w-[15%]">Veículo</th>
-                                <th class="p-4 w-[25%]">Serviços</th>
-                                <th class="p-4 w-[15%]">Confirmação</th>
-                                <th class="p-4 w-[10%]">Horário</th>
-                                <th class="p-4 w-[15%] text-center">Ações</th>
+                            <tr class="bg-stone-950/40 text-stone-400 text-[11px] font-bold uppercase tracking-wider border-b border-stone-850">
+                                <th class="p-4 w-[18%]">Cliente</th>
+                                <th class="p-4 w-[12%]">Veículo</th>
+                                <th class="p-4 w-[25%]">Serviços Solicitados</th>
+                                <th class="p-4 w-[15%]">Telefone</th>
+                                <th class="p-4 w-[12%]">Ação</th>
+                                <th class="p-4 w-[18%]" colspan="2">Horário / Controle</th>
                             </tr>
                         </thead>
-                        <tbody id="tabelaHoje" class="text-sm divide-y divide-stone-800/50"></tbody>
+                        <tbody id="tabelaHoje" class="text-sm divide-y divide-stone-850"></tbody>
                     </table>
                 </div>
             </div>
 
-            <div class="bg-stone-900/90 border border-stone-800 rounded-xl overflow-hidden shadow-xl backdrop-blur-sm">
-                <button onclick="toggleSecao('secaoAmanha', 'setaAmanha')" class="w-full bg-stone-950/80 px-4 py-3.5 flex justify-between items-center border-b border-stone-800 hover:bg-stone-900/60 transition-colors text-left">
-                    <div class="flex items-center space-x-2">
-                        <span class="w-2 h-2 rounded-full bg-orange-500"></span>
-                        <h2 class="text-xs font-black uppercase tracking-wider text-stone-200">Agendamentos de Amanhã</h2>
-                    </div>
-                    <svg id="setaAmanha" xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-stone-400 transition-transform duration-200" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
+            <div class="bg-stone-900/40 border border-stone-800 rounded-2xl p-4 space-y-3">
+                <button onclick="toggleSecao('secaoAmanha', 'setaAmanha')" class="w-full flex items-center justify-between font-bold text-xs uppercase tracking-wider text-stone-400 hover:text-stone-200 transition-colors">
+                    <span>Amanhã</span>
+                    <svg id="setaAmanha" xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 transition-transform duration-200" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
                 </button>
                 <div id="secaoAmanha" class="overflow-x-auto">
-                    <table class="w-full text-left border-collapse min-w-[700px]">
+                    <table class="w-full text-left border-collapse min-w-[780px]">
                         <thead>
-                            <tr class="bg-stone-950/40 text-stone-400 text-[11px] font-bold uppercase tracking-wider border-b border-stone-800/50">
-                                <th class="p-4 w-[20%]">Cliente</th>
-                                <th class="p-4 w-[15%]">Veículo</th>
-                                <th class="p-4 w-[25%]">Serviços</th>
-                                <th class="p-4 w-[15%]">Confirmação</th>
-                                <th class="p-4 w-[10%]">Horário</th>
-                                <th class="p-4 w-[15%] text-center">Ações</th>
+                            <tr class="bg-stone-950/40 text-stone-400 text-[11px] font-bold uppercase tracking-wider border-b border-stone-850">
+                                <th class="p-4 w-[18%]">Cliente</th>
+                                <th class="p-4 w-[12%]">Veículo</th>
+                                <th class="p-4 w-[25%]">Serviços Solicitados</th>
+                                <th class="p-4 w-[15%]">Telefone</th>
+                                <th class="p-4 w-[12%]">Ação</th>
+                                <th class="p-4 w-[18%]" colspan="2">Horário / Controle</th>
                             </tr>
                         </thead>
-                        <tbody id="tabelaAmanha" class="text-sm divide-y divide-stone-800/50"></tbody>
+                        <tbody id="tabelaAmanha" class="text-sm divide-y divide-stone-850"></tbody>
                     </table>
                 </div>
             </div>
 
-            <div class="bg-stone-900/90 border border-stone-800 rounded-xl overflow-hidden shadow-xl backdrop-blur-sm">
-                <button onclick="toggleSecao('secaoSemana', 'setaSemana')" class="w-full bg-stone-950/80 px-4 py-3.5 flex justify-between items-center border-b border-stone-800 hover:bg-stone-900/60 transition-colors text-left">
-                    <div class="flex items-center space-x-2">
-                        <span class="w-2 h-2 rounded-full bg-amber-500"></span>
-                        <h2 class="text-xs font-black uppercase tracking-wider text-stone-200">Agendamentos desta Semana (Próximos 7 dias)</h2>
-                    </div>
-                    <svg id="setaSemana" xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-stone-400 transition-transform duration-200" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
+            <div class="bg-stone-900/40 border border-stone-800 rounded-2xl p-4 space-y-3">
+                <button onclick="toggleSecao('secaoSemana', 'setaSemana')" class="w-full flex items-center justify-between font-bold text-xs uppercase tracking-wider text-stone-400 hover:text-stone-200 transition-colors">
+                    <span>Próximos 7 Dias</span>
+                    <svg id="setaSemana" xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 transition-transform duration-200" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
                 </button>
                 <div id="secaoSemana" class="overflow-x-auto">
-                    <table class="w-full text-left border-collapse min-w-[700px]">
+                    <table class="w-full text-left border-collapse min-w-[780px]">
                         <thead>
-                            <tr class="bg-stone-950/40 text-stone-400 text-[11px] font-bold uppercase tracking-wider border-b border-stone-800/50">
+                            <tr class="bg-stone-950/40 text-stone-400 text-[11px] font-bold uppercase tracking-wider border-b border-stone-850">
                                 <th class="p-4 w-[18%]">Cliente</th>
                                 <th class="p-4 w-[12%]">Veículo</th>
-                                <th class="p-4 w-[22%]">Serviços</th>
-                                <th class="p-4 w-[15%]">Confirmação</th>
-                                <th class="p-4 w-[13%]">Data / Hora</th>
-                                <th class="p-4 w-[15%] text-center">Ações</th>
+                                <th class="p-4 w-[25%]">Serviços Solicitados</th>
+                                <th class="p-4 w-[15%]">Telefone</th>
+                                <th class="p-4 w-[12%]">Ação</th>
+                                <th class="p-4 w-[18%]" colspan="2">Data / Hora / Controle</th>
                             </tr>
                         </thead>
-                        <tbody id="tabelaSemana" class="text-sm divide-y divide-stone-800/50"></tbody>
+                        <tbody id="tabelaSemana" class="text-sm divide-y divide-stone-850"></tbody>
                     </table>
                 </div>
             </div>
 
-            <div class="bg-stone-900/90 border border-stone-800 rounded-xl overflow-hidden shadow-xl backdrop-blur-sm">
-                <button onclick="toggleSecao('secaoFuturos', 'setaSuturos')" class="w-full bg-stone-950/80 px-4 py-3.5 flex justify-between items-center border-b border-stone-800 hover:bg-stone-900/60 transition-colors text-left">
-                    <div class="flex items-center space-x-2">
-                        <span class="w-2 h-2 rounded-full bg-blue-500"></span>
-                        <h2 class="text-xs font-black uppercase tracking-wider text-stone-200">Demais Agendamentos Futuros (Até fim do mês)</h2>
-                    </div>
-                    <svg id="setaSuturos" xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-stone-400 transition-transform duration-200" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
+            <div class="bg-stone-900/40 border border-stone-800 rounded-2xl p-4 space-y-3">
+                <button onclick="toggleSecao('secaoFuturos', 'setaFuturos')" class="w-full flex items-center justify-between font-bold text-xs uppercase tracking-wider text-stone-400 hover:text-stone-200 transition-colors">
+                    <span>Agendamentos Futuros</span>
+                    <svg id="setaFuturos" xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 transition-transform duration-200" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
                 </button>
                 <div id="secaoFuturos" class="overflow-x-auto">
-                    <table class="w-full text-left border-collapse min-w-[700px]">
+                    <table class="w-full text-left border-collapse min-w-[780px]">
                         <thead>
-                            <tr class="bg-stone-950/40 text-stone-400 text-[11px] font-bold uppercase tracking-wider border-b border-stone-800/50">
+                            <tr class="bg-stone-950/40 text-stone-400 text-[11px] font-bold uppercase tracking-wider border-b border-stone-850">
                                 <th class="p-4 w-[18%]">Cliente</th>
                                 <th class="p-4 w-[12%]">Veículo</th>
-                                <th class="p-4 w-[22%]">Serviços</th>
-                                <th class="p-4 w-[15%]">Confirmação</th>
-                                <th class="p-4 w-[13%]">Data / Hora</th>
-                                <th class="p-4 w-[15%] text-center">Ações</th>
+                                <th class="p-4 w-[25%]">Serviços Solicitados</th>
+                                <th class="p-4 w-[15%]">Telefone</th>
+                                <th class="p-4 w-[12%]">Ação</th>
+                                <th class="p-4 w-[18%]" colspan="2">Data / Hora / Controle</th>
                             </tr>
                         </thead>
-                        <tbody id="tabelaFuturos" class="text-sm divide-y divide-stone-800/50"></tbody>
+                        <tbody id="tabelaFuturos" class="text-sm divide-y divide-stone-850"></tbody>
                     </table>
                 </div>
             </div>
 
-            <div class="bg-stone-900/60 border border-stone-800/60 rounded-xl overflow-hidden shadow-md backdrop-blur-sm opacity-75">
-                <button onclick="toggleSecao('secaoPassados', 'setaPassados')" class="w-full bg-stone-950/40 px-4 py-3.5 flex justify-between items-center border-b border-stone-800/30 hover:bg-stone-900/40 transition-colors text-left">
-                    <div class="flex items-center space-x-2">
-                        <span class="w-2 h-2 rounded-full bg-stone-600"></span>
-                        <h2 class="text-xs font-black uppercase tracking-wider text-stone-400">Agendamentos Passados / Histórico</h2>
-                    </div>
-                    <svg id="setaPassados" xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-stone-500 transition-transform duration-200 rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
+            <div class="bg-stone-900/20 border border-stone-900 rounded-2xl p-4 space-y-3">
+                <button onclick="toggleSecao('secaoPassados', 'setaPassados')" class="w-full flex items-center justify-between font-bold text-xs uppercase tracking-wider text-stone-500 hover:text-stone-400 transition-colors">
+                    <span>Histórico de Atendimentos Passados</span>
+                    <svg id="setaPassados" xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 rotate-180 transition-transform duration-200" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
                 </button>
                 <div id="secaoPassados" class="hidden overflow-x-auto">
                     <table class="w-full text-left border-collapse min-w-[700px]">
@@ -199,10 +198,8 @@
                 Desenvolvido e provido por &copy; 2026 <span class="text-stone-500 font-bold">VTK Technologies</span>
             </p>
         </footer>
-    </div> <script src="script.js"></script>
-    <script>
-        verificarSessaoOficina();
-        document.getElementById('loginForm').addEventListener('submit', logarOficina);
-    </script>
+    </div> 
+
+    <script src="script.js"></script>
 </body>
 </html>
